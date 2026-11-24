@@ -3,16 +3,27 @@ header, main, footer { padding: 12px 24px; }
 h1 { margin: 0; font-size: 22px; }
 .sub { margin: 2px 0 0; color: #666; }
 .list { list-style: none; margin: 0; padding: 0; max-width: 960px; }
-.row { display: grid; grid-template-columns: 90px 50px 1fr 200px auto; gap: 12px; align-items: center; min-height: 44px; padding: 0 12px; border-bottom: 1px solid #e5e5e5; background: #fff; }
+.row { display: grid; grid-template-columns: 90px 50px 1fr 200px 80px; cursor: pointer; gap: 12px; align-items: center; min-height: 44px; padding: 0 12px; border-bottom: 1px solid #e5e5e5; background: #fff; }
 .row .id { font-family: ui-monospace, monospace; }
 .row.sev1 .sev { color: #b00020; font-weight: 600; }
 .row.sev2 .sev { color: #a15c00; }
 .row time { color: #555; font-variant-numeric: tabular-nums; }
 footer { color: #777; font-size: 13px; }
-.row .action { min-width: 70px; text-align: right; }
-.row button { min-height: 32px; padding: 0 14px; border: 1px solid #1d1d1f; border-radius: 4px; background: #fff; font: inherit; cursor: pointer; }
-.row button:disabled { opacity: .5; cursor: default; }
 .acked { color: #1a7f37; font-weight: 600; }
 .loader, .empty { color: #666; }
 .error { color: #b00020; }
 [hidden] { display: none !important; }
+main { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+main > p { flex-basis: 100%; margin: 0; }
+.list { flex: 1 1 560px; }
+.row.selected { background: #eef4ff; outline: 2px solid #2b5fd9; outline-offset: -2px; }
+.row:focus-visible { outline: 2px solid #2b5fd9; outline-offset: -2px; }
+.row .action { text-align: right; }
+.panel { flex: 0 0 300px; position: sticky; top: 12px; padding: 16px; border: 1px solid #d0d0d5; border-radius: 6px; background: #fff; }
+.panel h2 { margin: 0 0 4px; font-size: 20px; font-family: ui-monospace, monospace; }
+.panel .meta { margin: 0 0 8px; color: #666; }
+.panel .summary { margin: 0 0 8px; font-size: 17px; }
+.panel .buttons { display: flex; gap: 8px; margin: 16px 0 0; }
+.panel button { min-height: 36px; padding: 0 14px; border: 1px solid #1d1d1f; border-radius: 4px; background: #fff; font: inherit; cursor: pointer; }
+.panel button.primary { background: #1d1d1f; color: #fff; }
+.panel button:disabled { opacity: .5; cursor: default; }

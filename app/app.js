@@ -6,11 +6,14 @@ const list = document.querySelector('[data-testid="incident-list"]');
 const loader = document.querySelector('[data-testid="loader"]');
 const empty = document.querySelector('[data-testid="empty"]');
 const errorBox = document.querySelector('.error');
+const board = document.querySelector('[data-testid="board"]');
 
 const incidents = new Map();
 const rows = new Map();
 const acked = new Set();
 let loaded = false;
+let selectedId = null;
+let panel = null;
 
 const timeFormat = new Intl.DateTimeFormat(undefined, {
   year: 'numeric',
@@ -38,6 +41,7 @@ function buildRow(i) {
   li.setAttribute('data-testid', 'incident-row');
   li.dataset.id = i.id;
   li.className = `row ${i.severity}`;
+  li.tabIndex = 0;
   li.innerHTML = `
     <span class="id">${esc(i.id)}</span>
     <span class="sev">${esc(i.severity)}</span>
@@ -49,16 +53,54 @@ function buildRow(i) {
 
 function setAction(li, id) {
   const slot = li.querySelector('.action');
-  if (acked.has(id)) {
+  const has = slot.querySelector('[data-testid="acked"]');
+  if (acked.has(id) && !has) {
     slot.innerHTML = '<span data-testid="acked" class="acked">✓ acked</span>';
+  }
+  li.classList.toggle('selected', id === selectedId);
+}
+
+function closePanel() {
+  selectedId = null;
+  if (panel) panel.remove();
+  panel = null;
+  for (const li of rows.values()) li.classList.remove('selected');
+}
+
+function renderPanel() {
+  const i = selectedId && incidents.get(selectedId);
+  if (!i) {
+    if (panel) closePanel();
     return;
   }
-  if (slot.querySelector('[data-testid="ack"]')) return;
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.setAttribute('data-testid', 'ack');
-  button.textContent = 'Ack';
-  slot.replaceChildren(button);
+  if (!panel) {
+    panel = document.createElement('aside');
+    panel.setAttribute('data-testid', 'incident-panel');
+    panel.className = 'panel';
+    board.append(panel);
+  }
+  if (panel.dataset.id !== i.id) {
+    panel.dataset.id = i.id;
+    panel.innerHTML = `
+      <h2>${esc(i.id)}</h2>
+      <p class="meta">${esc(i.severity)} · ${esc(i.service)} · ${esc(i.region)}</p>
+      <p class="summary">${esc(i.summary)}</p>
+      <p class="meta">opened <time datetime="${esc(i.openedAt)}">${esc(localTime(i.openedAt))}</time></p>
+      <p class="buttons">
+        <button type="button" data-testid="panel-ack" class="primary">Ack ${esc(i.id)}</button>
+        <button type="button" class="close">Close</button>
+      </p>`;
+  }
+  const button = panel.querySelector('[data-testid="panel-ack"]');
+  const done = acked.has(i.id);
+  button.disabled = done;
+  button.textContent = done ? `${i.id} acked` : `Ack ${i.id}`;
+}
+
+function select(id) {
+  selectedId = id;
+  renderPanel();
+  render();
 }
 
 function render() {
@@ -80,13 +122,30 @@ function render() {
   if (!same) list.replaceChildren(...ordered);
   loader.hidden = loaded;
   empty.hidden = !loaded || ordered.length > 0;
+  renderPanel();
 }
 
-list.addEventListener('click', async (event) => {
-  const button = event.target.closest('[data-testid="ack"]');
-  if (!button) return;
-  const li = button.closest('[data-testid="incident-row"]');
-  const id = li.dataset.id;
+list.addEventListener('click', (event) => {
+  const li = event.target.closest('[data-testid="incident-row"]');
+  if (li) select(li.dataset.id);
+});
+
+list.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const li = event.target.closest('[data-testid="incident-row"]');
+  if (!li) return;
+  event.preventDefault();
+  select(li.dataset.id);
+});
+
+board.addEventListener('click', async (event) => {
+  if (event.target.closest('.close')) {
+    closePanel();
+    return;
+  }
+  const button = event.target.closest('[data-testid="panel-ack"]');
+  if (!button || !panel) return;
+  const id = panel.dataset.id;
   button.disabled = true;
   try {
     await ack(id);
