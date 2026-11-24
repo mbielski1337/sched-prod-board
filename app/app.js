@@ -116,10 +116,9 @@ function render() {
     setAction(li, i.id);
     return li;
   });
-  const same =
-    list.children.length === ordered.length &&
-    ordered.every((li, n) => list.children[n] === li);
-  if (!same) list.replaceChildren(...ordered);
+  ordered.forEach((li, n) => {
+    if (list.children[n] !== li) list.insertBefore(li, list.children[n] || null);
+  });
   loader.hidden = loaded;
   empty.hidden = !loaded || ordered.length > 0;
   renderPanel();
